@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mango IDE</title>
+<meta name="description" content="Mango IDE. UI, animation, building, modeling, scripting, SFX and VFX in one place for AI to work in.">
+<link rel="icon" type="image/svg+xml" href="assets/mango-logo.svg">
+<meta name="theme-color" content="#0D0D0C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  /* Layout: dark brutalist poster. Left-aligned slab headline, a sticky scroll stage on a dot grid where spokes grow out of the mango, then a download slab. Light hairlines and hard light shadows on near-black, one amber-orange accent. */
+  :root {
+    --bg: #0D0D0C;
+    --panel: #171716;
+    --fg: #F1F1EE;
+    --accent: #FF9100;
+    --on-accent: #0B0B0B;
+    --display: "Archivo Black", "Arial Black", Impact, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --bw: 4px;
+    --gut: 16px;
+    --head: 56px;
+    --nw: clamp(124px, 32vw, 176px);
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 16px;
+    line-height: 1.45;
+    overflow-x: clip;
+  }
+  a { color: inherit; }
+  ::selection { background: var(--accent); color: var(--on-accent); }
+  :focus-visible { outline: 4px dashed var(--accent); outline-offset: 4px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ---------- header ---------- */
+  .top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    min-height: var(--head);
+    padding: env(safe-area-inset-top, 0px) var(--gut) 0;
+    background: var(--bg);
+    border-bottom: var(--bw) solid var(--fg);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--display); font-size: 1.05rem; line-height: 1;
+    text-transform: uppercase; text-decoration: none; white-space: nowrap;
+  }
+  .brand svg { width: 22px; height: 32px; flex: none; }
+  .nav { display: flex; gap: 8px; }
+  .chip {
+    font: 700 .75rem/1 var(--mono);
+    text-transform: uppercase; letter-spacing: .04em; text-decoration: none;
+    padding: .6rem .75rem;
+    background: var(--bg); color: var(--fg);
+    border: 3px solid var(--fg);
+    transition: background .1s, color .1s, border-color .1s;
+  }
+  .chip:hover { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .chip--solid { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .chip--solid:hover { background: var(--fg); border-color: var(--fg); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    min-height: 100vh; min-height: 100svh;
+    display: flex; flex-direction: column;
+    padding-top: var(--head);
+    border-bottom: var(--bw) solid var(--fg);
+  }
+  .hero__main {
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center; gap: clamp(20px, 4vh, 40px);
+    padding: clamp(24px, 5vh, 56px) var(--gut);
+    width: 100%; max-width: 1480px; margin-inline: auto;
+  }
+  .title {
+    margin: 0;
+    font-family: var(--display); font-weight: 400;
+    font-size: min(21vw, 31svh);
+    line-height: .84; letter-spacing: -.025em; text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: flex-start;
+  }
+  .title .ide {
+    display: inline-block;
+    margin: .07em 0 0 .32em;
+    padding: .03em .12em 0;
+    background: var(--accent); color: var(--on-accent);
+    border: .05em solid var(--fg);
+    box-shadow: .07em .07em 0 var(--fg);
+  }
+  .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .75em;
+    font: 700 1.05rem/1 var(--mono);
+    text-transform: uppercase; letter-spacing: .04em; text-decoration: none;
+    padding: 1.05rem 1.5rem;
+    background: var(--accent); color: var(--on-accent);
+    border: var(--bw) solid var(--fg);
+    box-shadow: 8px 8px 0 var(--fg);
+    transition: transform .12s, box-shadow .12s, background .12s;
+  }
+  .btn:hover { transform: translate(5px, 5px); box-shadow: 3px 3px 0 var(--fg); background: var(--fg); }
+  .btn:active { transform: translate(8px, 8px); box-shadow: 0 0 0 var(--fg); }
+  .btn svg { width: 1.3em; height: 1.3em; stroke: currentColor; fill: none; stroke-width: 3; stroke-linecap: square; }
+  .tag {
+    font: 700 .9rem/1 var(--mono);
+    text-transform: uppercase; letter-spacing: .06em;
+    padding: .5rem .8rem;
+    background: var(--bg); color: var(--accent);
+    border: 3px solid var(--accent);
+    transform: rotate(-3deg);
+  }
+  .hero__foot { display: flex; justify-content: flex-end; }
+  .cue {
+    display: flex; align-items: center; gap: 10px;
+    font: 700 .85rem/1 var(--mono); text-transform: uppercase; letter-spacing: .12em;
+  }
+  .cue svg { width: 22px; height: 28px; stroke: var(--fg); fill: none; stroke-width: 3.5; stroke-linecap: square; animation: bob 1.2s steps(2, jump-none) infinite; }
+  @keyframes bob { 0% { transform: translateY(-4px); } 100% { transform: translateY(5px); } }
+
+  .marquee { overflow: hidden; background: var(--panel); color: var(--fg); border-top: var(--bw) solid var(--fg); }
+  .marquee__track { display: flex; width: max-content; animation: slide 34s linear infinite; }
+  .marquee__group { display: flex; flex: none; }
+  .marquee__group span {
+    display: flex; align-items: center; gap: 2.25rem; padding: 1rem 1.125rem 1rem 0;
+    font: 700 .95rem/1 var(--mono); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap;
+  }
+  .marquee__group span::after { content: ""; width: 12px; height: 12px; background: var(--accent); }
+  @keyframes slide { to { transform: translateX(-50%); } }
+
+  /* ---------- scroll stage ---------- */
+  .build { position: relative; height: 560vh; height: 560svh; border-bottom: var(--bw) solid var(--fg); }
+  .build__sticky {
+    position: sticky; top: 0;
+    height: 100vh; height: 100svh;
+    overflow: hidden;
+    background-color: var(--bg);
+    background-image: radial-gradient(circle at center, rgb(241 241 238 / .26) 2px, transparent 2.6px);
+    background-size: 32px 32px;
+    background-position: center top;
+  }
+  .lines { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
+  .spoke { stroke: var(--fg); stroke-width: 5; fill: none; }
+  .ring { stroke: var(--fg); stroke-width: 3; fill: none; stroke-linejoin: miter; }
+  .pulse { fill: var(--accent); stroke: var(--bg); stroke-width: 2.5; }
+
+  .mango { position: absolute; z-index: 2; left: 0; top: 0; transform-origin: 50% 50%; will-change: transform; }
+  .mango > svg { display: block; width: 100%; height: 100%; }
+  .ai {
+    position: absolute; right: -26%; top: 16%;
+    font: 400 1em/1 var(--display);
+    padding: .3em .5em .25em;
+    background: var(--accent); color: var(--on-accent);
+    border: .12em solid var(--fg);
+    box-shadow: .14em .14em 0 var(--fg);
+    opacity: 0; transform: scale(0) rotate(14deg);
+  }
+
+  .node {
+    position: absolute; z-index: 3; left: 0; top: 0;
+    width: var(--nw);
+    display: flex; align-items: center; gap: .55rem;
+    padding: .6rem;
+    background: var(--panel); color: var(--fg);
+    border: var(--bw) solid var(--fg);
+    box-shadow: 6px 6px 0 var(--fg);
+    font: 700 clamp(11px, 3.3vw, 15px)/1 var(--mono);
+    text-transform: uppercase; white-space: nowrap;
+    opacity: 0; visibility: hidden;
+    will-change: transform;
+  }
+  .node.is-hot { background: var(--accent); color: var(--on-accent); }
+  .node svg { width: 1.5em; height: 1.5em; flex: none; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linejoin: miter; stroke-linecap: square; }
+
+  .hud, .done {
+    position: absolute; z-index: 4; left: 0; right: 0; bottom: 16px; margin-inline: auto;
+    width: min(calc(100% - 2 * var(--gut)), 560px);
+    border: var(--bw) solid var(--fg);
+    box-shadow: 6px 6px 0 var(--fg);
+  }
+  .hud {
+    display: flex; align-items: center; gap: 14px;
+    padding: .7rem .85rem;
+    background: var(--panel); color: var(--fg);
+    font: 700 1rem/1 var(--mono); font-variant-numeric: tabular-nums;
+  }
+  .meter { flex: 1; height: 16px; border: 3px solid var(--fg); background: var(--bg); }
+  .meter i { display: block; height: 100%; width: 0; background: var(--accent); }
+  .done {
+    padding: .65rem 1rem .55rem;
+    background: var(--accent); color: var(--on-accent);
+    font: 400 clamp(1.4rem, 6vw, 2.3rem)/1 var(--display); text-transform: uppercase; text-align: center;
+    opacity: 0;
+  }
+
+  /* ---------- download ---------- */
+  .get { background: var(--panel); color: var(--fg); padding-top: clamp(56px, 10vw, 120px); }
+  .get__inner {
+    width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: var(--gut);
+    display: grid; gap: clamp(28px, 5vw, 48px);
+  }
+  .warn {
+    position: relative;
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 36px 20px 20px;
+    background: var(--accent); color: var(--on-accent);
+  }
+  .warn::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 16px;
+    background: repeating-linear-gradient(-45deg, var(--on-accent) 0 14px, var(--accent) 14px 28px);
+  }
+  .warn svg { width: 44px; height: 44px; flex: none; }
+  .warn p { margin: 0; min-width: 0; max-width: 60ch; font-weight: 700; font-size: clamp(1rem, 2.6vw, 1.3rem); line-height: 1.4; }
+  .warn strong {
+    display: inline-block; margin-right: .5em; padding: .1em .5em;
+    background: var(--on-accent); color: var(--accent); letter-spacing: .08em;
+  }
+
+  .dl {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 28px;
+    padding: clamp(18px, 3.5vw, 36px) clamp(18px, 3.5vw, 40px);
+    background: var(--bg); color: var(--fg);
+    border: var(--bw) solid var(--fg);
+    box-shadow: 12px 12px 0 var(--accent);
+    text-decoration: none;
+    transition: transform .12s, box-shadow .12s, background .12s, color .12s;
+  }
+  .dl:hover { transform: translate(8px, 8px); box-shadow: 4px 4px 0 var(--accent); background: var(--accent); color: var(--on-accent); }
+  .dl:active { transform: translate(12px, 12px); box-shadow: 0 0 0 var(--accent); }
+  .dl__t {
+    display: flex; align-items: center; gap: .2em;
+    font: 400 clamp(2.4rem, 10.5vw, 6.25rem)/.9 var(--display); letter-spacing: -.02em; text-transform: uppercase;
+  }
+  .dl__t svg { width: .8em; height: .8em; flex: none; stroke: currentColor; fill: none; stroke-width: 3.4; stroke-linecap: square; }
+  .dl__v {
+    font: 700 clamp(.8rem, 2.4vw, 1.05rem)/1 var(--mono); text-transform: uppercase; letter-spacing: .06em;
+    padding: .6em .9em; color: var(--accent); border: 3px solid var(--accent);
+    transition: color .12s, border-color .12s;
+  }
+  .dl:hover .dl__v { color: var(--on-accent); border-color: var(--on-accent); }
+
+  .discord {
+    display: flex; align-items: center; gap: 20px;
+    width: 100%; max-width: 640px;
+    padding: 20px 24px;
+    background: var(--bg); color: var(--fg);
+    border: var(--bw) solid var(--fg);
+    box-shadow: 8px 8px 0 var(--fg);
+    text-decoration: none;
+    transition: transform .12s, box-shadow .12s, background .12s, color .12s;
+  }
+  .discord:hover { transform: translate(5px, 5px); box-shadow: 3px 3px 0 var(--fg); background: var(--accent); color: var(--on-accent); }
+  .discord svg { width: clamp(44px, 8vw, 64px); height: auto; flex: none; fill: currentColor; }
+  .discord div { min-width: 0; }
+  .discord b { display: block; font: 400 clamp(1.3rem, 4vw, 1.9rem)/1 var(--display); text-transform: uppercase; }
+  .discord small { display: block; margin-top: .6em; font-size: .85rem; line-height: 1.4; }
+
+  .foot {
+    width: 100%; max-width: 1120px; margin: clamp(56px, 9vw, 104px) auto 0;
+    padding: 20px var(--gut) calc(24px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px;
+    border-top: 3px solid var(--fg);
+    font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+  }
+  .foot a { text-decoration: none; border-bottom: 2px solid var(--accent); }
+  .foot a:hover { background: var(--accent); color: var(--on-accent); }
+
+  /* ---------- small screens ---------- */
+  @media (max-width: 520px) {
+    .brand { font-size: .95rem; }
+    .brand svg { width: 19px; height: 28px; }
+    .chip { padding: .55rem .6rem; font-size: .7rem; }
+    .btn { font-size: .95rem; padding: .95rem 1.2rem; }
+    .warn { padding-inline: 16px; gap: 12px; }
+    .warn svg { width: 36px; height: 36px; }
+    .discord { padding: 16px; gap: 14px; }
+  }
+
+  /* ---------- reduced motion: show the finished build, no scroll-scrub ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .marquee__track, .cue svg { animation: none; }
+    .build { height: auto; }
+    .build__sticky { position: relative; height: max(100svh, 640px); }
+    .btn, .dl, .discord { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- mango symbol, reused in header + stage -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="mango-sym" viewBox="0 0 297 436">
+      <path fill="#D2691E" d="M163.0 76.0L153.0 76.6L145.0 77.7L132.0 80.7L125.0 82.8L117.0 85.9L106.0 90.9L99.0 94.9L89.0 101.8L83.0 106.7L75.0 114.3L69.8 120.0L62.7 129.0L56.8 138.0L52.8 145.0L47.7 156.0L44.7 164.0L41.9 173.0L39.8 182.0L37.8 195.0L37.4 211.0L37.6 220.0L39.6 234.0L41.7 243.0L48.3 264.0L50.3 272.0L51.4 279.0L51.5 285.0L51.4 289.0L50.4 296.0L47.4 306.0L45.3 311.0L42.3 317.0L37.3 325.0L32.0 331.6L16.7 348.0L11.9 354.0L8.6 359.0L5.7 365.0L3.7 371.0L2.8 377.0L2.7 382.0L3.7 390.0L4.8 394.0L5.9 397.0L8.8 403.0L13.6 410.0L17.0 413.6L21.0 417.4L28.0 422.3L35.0 426.1L43.0 429.2L50.0 431.2L57.0 432.6L64.0 433.4L73.0 433.7L82.0 433.2L89.0 432.2L100.0 430.1L111.0 427.4L120.0 424.4L128.0 421.3L140.0 416.1L148.0 412.3L161.0 405.4L171.0 399.3L186.0 389.2L194.0 383.4L205.0 374.4L214.0 366.2L223.0 357.4L234.2 345.0L241.0 336.8L249.3 326.0L259.3 311.0L264.2 303.0L270.2 292.0L276.2 280.0L279.2 273.0L282.2 266.0L286.3 255.0L291.3 236.0L293.3 225.0L294.2 217.0L294.8 202.0L294.2 188.0L293.2 180.0L291.3 170.0L289.2 162.0L287.3 156.0L284.1 148.0L280.4 140.0L275.2 131.0L271.2 125.0L267.4 120.0L262.1 114.0L258.0 109.9L250.0 102.9L238.0 94.6L227.0 88.9L212.0 82.8L205.0 80.7L197.0 78.8L185.0 76.7L180.0 76.5L175.0 75.8L164.0 75.9Z"/>
+      <path fill="#FFD700" d="M211.0 83.7L209.0 84.5L193.0 84.5L190.0 85.5L185.0 85.7L184.0 86.3L177.0 87.7L174.0 89.3L169.0 90.7L163.0 93.7L161.0 95.3L158.0 96.7L156.0 98.3L151.6 101.0L147.4 105.0L145.0 106.5L139.5 112.0L138.0 114.4L134.0 118.6L133.0 120.4L128.0 126.6L126.3 130.0L122.7 135.0L117.7 145.0L117.3 147.0L115.7 150.0L115.3 152.0L113.7 155.0L113.3 157.0L112.7 158.0L112.3 161.0L110.7 165.0L110.5 168.0L109.5 171.0L109.5 173.0L108.5 176.0L108.5 180.0L107.5 183.0L107.5 208.0L108.5 211.0L108.5 216.0L109.3 218.0L109.7 222.0L110.3 223.0L111.7 230.0L112.3 231.0L114.7 239.0L117.3 244.0L117.7 246.0L121.3 253.0L121.7 255.0L124.3 260.0L124.7 262.0L126.3 265.0L127.7 270.0L129.3 273.0L129.7 276.0L131.3 280.0L131.7 283.0L132.3 284.0L132.5 287.0L133.5 290.0L133.5 293.0L134.5 296.0L134.5 300.0L135.5 303.0L135.5 325.0L135.3 327.0L134.5 329.0L134.5 334.0L133.7 336.0L133.3 339.0L132.7 340.0L132.3 344.0L131.7 345.0L128.3 356.0L126.7 359.0L126.3 361.0L121.3 371.0L119.7 373.0L117.0 377.4L114.0 380.6L112.5 383.0L98.4 397.0L94.0 399.7L91.0 402.3L90.0 402.7L88.0 404.3L85.0 405.7L83.0 407.3L77.0 410.3L75.0 410.7L72.0 412.3L70.0 412.7L67.0 414.3L65.0 414.7L61.0 416.3L58.0 416.7L57.0 417.3L54.0 417.7L53.0 418.3L48.0 418.5L45.0 419.5L28.0 419.5L26.0 419.9L26.3 421.0L27.5 422.0L33.0 425.2L38.0 427.4L43.0 429.2L51.0 431.4L61.0 433.2L73.0 433.7L82.0 433.2L88.0 432.4L104.0 429.2L112.0 427.1L120.0 424.4L130.0 420.4L140.0 416.1L148.0 412.3L161.0 405.4L173.0 398.1L183.0 391.3L194.0 383.4L205.0 374.4L214.0 366.2L223.4 357.0L233.0 346.4L239.2 339.0L249.3 326.0L259.3 311.0L264.2 303.0L270.2 292.0L276.2 280.0L279.2 273.0L282.2 266.0L286.3 255.0L291.3 236.0L293.3 225.0L294.3 216.0L294.7 209.0L294.7 195.0L294.3 189.0L293.2 180.0L291.3 170.0L290.1 165.0L288.3 159.0L286.2 153.0L282.4 144.0L279.3 138.0L275.2 131.0L271.2 125.0L267.4 120.0L263.0 114.9L259.0 110.9L250.0 102.9L238.0 94.6L231.0 90.8L222.0 86.7L214.0 83.7L212.0 83.5Z"/>
+      <path fill="#2E8B57" fill-rule="evenodd" d="M105.0 2.9L96.0 4.0L87.0 5.6L83.0 6.6L82.3 7.0L82.0 8.0L84.9 13.0L90.9 22.0L96.8 30.0L101.8 36.0L108.5 43.0L113.0 47.1L116.3 50.0L122.0 54.2L130.0 59.3L138.0 63.3L151.0 68.1L160.0 70.3L171.0 72.3L185.0 73.7L197.0 74.3L207.0 74.3L208.4 74.0L208.7 73.0L208.1 72.0L197.5 59.0L189.6 51.0L182.0 44.5L177.0 40.6L165.0 32.7L154.0 26.8L149.0 24.4L147.4 24.0L147.0 23.5L144.8 23.0L144.0 22.0L143.5 22.0L144.0 22.0L145.0 22.8L147.0 22.8L148.0 23.4L150.6 24.0L163.0 28.7L174.0 34.0L182.0 38.7L189.0 43.6L196.6 50.0L202.3 56.0L210.0 65.5L211.0 66.2L211.4 65.0L211.3 64.0L209.4 57.0L206.5 50.0L201.5 41.0L197.1 35.0L191.7 29.0L186.0 23.9L180.0 19.4L174.0 15.6L164.0 10.7L153.0 6.8L145.0 4.8L139.0 3.8L129.0 2.6L114.0 2.3L106.0 2.8Z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <a class="brand" href="#top" aria-label="Mango IDE, back to top">
+    <svg viewBox="0 0 297 436" aria-hidden="true"><use href="#mango-sym"/></svg>
+    <span>Mango IDE</span>
+  </a>
+  <nav class="nav" aria-label="Quick links">
+    <a class="chip" href="https://discord.gg/REPLACE-ME" target="_blank" rel="noopener">Discord</a>
+    <a class="chip chip--solid" href="#download">Download</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero__main">
+      <h1 class="title"><span>Mango</span><span class="ide">IDE</span></h1>
+      <div class="cta-row">
+        <a class="btn" href="#download">Download
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v16M5 12l7 7 7-7"/></svg>
+        </a>
+        <span class="tag">v0.8.10-beta</span>
+      </div>
+      <div class="hero__foot">
+        <div class="cue" aria-hidden="true">Scroll
+          <svg viewBox="0 0 22 28"><path d="M11 2v22M3 16l8 8 8-8"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <div class="marquee__group"><span>UI</span><span>Animation</span><span>Building</span><span>Modeling</span><span>Scripting</span><span>SFX</span><span>VFX</span></div>
+        <div class="marquee__group"><span>UI</span><span>Animation</span><span>Building</span><span>Modeling</span><span>Scripting</span><span>SFX</span><span>VFX</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="build" id="build" aria-labelledby="build-h">
+    <h2 class="sr-only" id="build-h">UI, Animation, Building, Modeling, Scripting, SFX and VFX in one place</h2>
+    <div class="build__sticky" id="sticky">
+      <svg class="lines" id="lines" aria-hidden="true"></svg>
+      <div class="mango" id="mango" aria-hidden="true">
+        <svg viewBox="0 0 297 436"><use href="#mango-sym"/></svg>
+        <div class="ai" id="ai">AI</div>
+      </div>
+      <div id="nodes" aria-hidden="true"></div>
+      <div class="hud" id="hud" aria-hidden="true"><span id="count">00/07</span><span class="meter"><i id="fill"></i></span></div>
+      <div class="done" id="done" aria-hidden="true">All in one.</div>
+    </div>
+  </section>
+
+  <section class="get" id="download">
+    <div class="get__inner">
+      <div class="warn" role="note">
+        <svg viewBox="0 0 44 44" aria-hidden="true">
+          <path d="M22 3L42 39H2Z" fill="#0B0B0B"/>
+          <path d="M22 15V27" stroke="#FF9100" stroke-width="4.5"/>
+          <rect x="19.75" y="30" width="4.5" height="4.5" fill="#FF9100"/>
+        </svg>
+        <p><strong>BETA</strong>Mango IDE is currently in BETA and in development. Expect bugs and inconsistencies.</p>
+      </div>
+
+      <!-- release link: swap for the direct asset URL if you want a one-click download -->
+      <a class="dl" href="https://github.com/Spackle01/Mango-IDE/releases" target="_blank" rel="noopener">
+        <span class="dl__t">Download
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v17M4 11l8 8 8-8M3 22h18"/></svg>
+        </span>
+        <span class="dl__v">v0.8.10-beta</span>
+      </a>
+
+      <a class="discord" href="https://discord.gg/REPLACE-ME" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+        <div>
+          <b>Discord</b>
+          <small>Our community. Bugs, questions and feedback go here.</small>
+        </div>
+      </a>
+    </div>
+
+    <footer class="foot">
+      <span>Mango IDE &copy; 2026</span>
+      <a href="https://github.com/Spackle01/Mango-IDE" target="_blank" rel="noopener">GitHub</a>
+    </footer>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var NODES = [
+    { label: 'UI',        icon: '<rect x="3" y="4" width="18" height="16"/><path d="M3 9h18M7 14h6"/>' },
+    { label: 'Animation', icon: '<circle cx="5.5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M8 16C10 5 15 5 17 16"/>' },
+    { label: 'Building',  icon: '<rect x="3" y="14" width="8" height="7"/><rect x="13" y="14" width="8" height="7"/><rect x="8" y="5" width="8" height="7"/>' },
+    { label: 'Modeling',  icon: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>' },
+    { label: 'Scripting', icon: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 5l-4 14"/>' },
+    { label: 'SFX',       icon: '<path d="M3 12h1M7 8v8M11 4v16M15 7v10M19 10v4M21 12h0"/>' },
+    { label: 'VFX',       icon: '<path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/>' }
+  ];
+
+  /* node anchors, as fractions of the ellipse (x: -1..1, y: -1..1) */
+  var LAYOUT = [[0, -1], [.95, -.55], [1, .35], [.62, 1], [-.62, 1], [-1, .35], [-.95, -.55]];
+  var TILT   = [-2, 2, -1.5, 2.5, -2.5, 1.5, -2];
+
+  var S0 = 0.04, STEP = 0.105, DUR = 0.09;     /* per-node scroll windows */
+  var RING0 = 0.79, RING1 = 0.90, FINAL0 = 0.92, FINAL1 = 0.98;
+
+  var NS = 'http://www.w3.org/2000/svg';
+  var $ = function (id) { return document.getElementById(id); };
+  var sticky = $('sticky'), build = $('build'), svg = $('lines'), nodesBox = $('nodes');
+  var mango = $('mango'), hud = $('hud'), count = $('count'), fillEl = $('fill');
+  var done = $('done'), ai = $('ai'), header = document.querySelector('.top');
+
+  var clamp = function (v, a, b) { return Math.min(b === undefined ? 1 : b, Math.max(a === undefined ? 0 : a, v)); };
+  var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
+  var easeBack = function (t) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+
+  function svgEl(name, attrs) {
+    var el = document.createElementNS(NS, name);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  /* ---- build DOM ---- */
+  var ring = svgEl('path', { 'class': 'ring' });
+  svg.appendChild(ring);
+  var spokes = [], pulses = [], els = [];
+  NODES.forEach(function (n, i) {
+    var line = svgEl('line', { 'class': 'spoke' });
+    svg.appendChild(line); spokes.push(line);
+    var el = document.createElement('div');
+    el.className = 'node';
+    el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + n.icon + '</svg><span>' + n.label + '</span>';
+    nodesBox.appendChild(el); els.push(el);
+  });
+  NODES.forEach(function () {
+    var p = svgEl('rect', { 'class': 'pulse', width: 10, height: 10 });
+    svg.appendChild(p); pulses.push(p);
+  });
+  var runner = svgEl('rect', { 'class': 'pulse', width: 10, height: 10 });
+  svg.appendChild(runner);
+
+  /* ---- geometry ---- */
+  var g = { W: 0, H: 0, cx: 0, cy: 0, R: 60, mw: 120, mh: 126, pts: [], lens: [], ringLen: 0, cum: [] };
+
+  function layout() {
+    var W = sticky.clientWidth, H = sticky.clientHeight;
+    var nw = els[0].offsetWidth, nh = els[0].offsetHeight;
+    var top = header.offsetHeight + 18, bottom = H - 106;
+    var cy = (top + bottom) / 2;
+    var rx = Math.min(W / 2 - nw / 2 - 14, 470);
+    var ry = Math.max(40, (bottom - top) / 2 - nh / 2);
+    var R = Math.max(40, Math.min(132, ry * 0.5, rx * 0.66));
+
+    g.W = W; g.H = H; g.cx = W / 2; g.cy = cy; g.R = R;
+    g.mh = R * 2.25; g.mw = g.mh * 297 / 436;
+    g.pts = LAYOUT.map(function (a) { return { x: W / 2 + a[0] * rx, y: cy + a[1] * ry }; });
+
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    mango.style.width = g.mw + 'px';
+    mango.style.height = g.mh + 'px';
+    mango.style.fontSize = Math.max(14, R * 0.3) + 'px';
+
+    g.lens = g.pts.map(function (p, i) {
+      var len = Math.hypot(p.x - g.cx, p.y - g.cy);
+      var s = spokes[i];
+      s.setAttribute('x1', g.cx); s.setAttribute('y1', g.cy);
+      s.setAttribute('x2', p.x);  s.setAttribute('y2', p.y);
+      s.style.strokeDasharray = len;
+      els[i].style.left = p.x + 'px';
+      els[i].style.top = p.y + 'px';
+      return len;
+    });
+
+    g.cum = [0]; g.ringLen = 0;
+    for (var i = 0; i < g.pts.length; i++) {
+      var a = g.pts[i], b = g.pts[(i + 1) % g.pts.length];
+      g.ringLen += Math.hypot(b.x - a.x, b.y - a.y);
+      g.cum.push(g.ringLen);
+    }
+    ring.setAttribute('d', 'M' + g.pts.map(function (p) { return p.x + ' ' + p.y; }).join('L') + 'Z');
+    ring.style.strokeDasharray = g.ringLen;
+    draw(cur, performance.now());
+  }
+
+  function ringPoint(d) {
+    for (var i = 0; i < g.cum.length - 1; i++) {
+      if (d <= g.cum[i + 1]) {
+        var t = (d - g.cum[i]) / (g.cum[i + 1] - g.cum[i]);
+        var a = g.pts[i], b = g.pts[(i + 1) % g.pts.length];
+        return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+      }
+    }
+    return g.pts[0];
+  }
+
+  /* ---- render ---- */
+  var cur = 0, target = 0, lastCount = -1;
+
+  function draw(p, now) {
+    var connected = 0, punch = 0, i;
+    for (i = 0; i < NODES.length; i++) {
+      var start = S0 + i * STEP;
+      var q = clamp((p - start) / DUR);
+      var lineT = easeOut(clamp(q / 0.6));
+      var enter = clamp((q - 0.55) / 0.45);
+      var e = enter > 0 ? easeBack(enter) : 0;
+
+      spokes[i].style.strokeDashoffset = g.lens[i] * (1 - lineT);
+
+      var el = els[i];
+      el.style.visibility = enter > 0 ? 'visible' : 'hidden';
+      el.style.opacity = enter > 0 ? 1 : 0;
+      el.style.transform = 'translate(-50%,-50%) scale(' + e + ') rotate(' + (TILT[i] - (1 - enter) * 14) + 'deg)';
+      el.classList.toggle('is-hot', enter > 0 && q < 1);
+
+      if (q >= 1) connected++;
+      punch += Math.max(0, 1 - Math.abs(p - (start + DUR)) / 0.025);
+
+      var pl = pulses[i];
+      if (q >= 1 && !reduce) {
+        var f = ((now * 0.00045) + i * 0.29) % 1;
+        if (i % 2) f = 1 - f;
+        var pt = g.pts[i];
+        pl.setAttribute('x', g.cx + (pt.x - g.cx) * f - 5);
+        pl.setAttribute('y', g.cy + (pt.y - g.cy) * f - 5);
+        pl.style.visibility = 'visible';
+      } else {
+        pl.style.visibility = 'hidden';
+      }
+    }
+
+    var rp = clamp((p - RING0) / (RING1 - RING0));
+    ring.style.strokeDashoffset = g.ringLen * (1 - easeOut(rp));
+    if (rp >= 1 && !reduce) {
+      var rpt = ringPoint(((now * 0.00028) % 1) * g.ringLen);
+      runner.setAttribute('x', rpt.x - 5); runner.setAttribute('y', rpt.y - 5);
+      runner.style.visibility = 'visible';
+    } else {
+      runner.style.visibility = 'hidden';
+    }
+
+    var fp = easeOut(clamp((p - FINAL0) / (FINAL1 - FINAL0)));
+    done.style.opacity = fp;
+    done.style.transform = 'translateY(' + (1 - fp) * 24 + 'px)';
+    hud.style.opacity = 1 - fp;
+    hud.style.visibility = fp >= 1 ? 'hidden' : 'visible';
+    ai.style.opacity = fp;
+    ai.style.transform = 'scale(' + fp + ') rotate(' + (14 - 24 * fp) + 'deg)';
+
+    if (connected !== lastCount) {
+      count.textContent = (connected < 10 ? '0' : '') + connected + '/0' + NODES.length;
+      lastCount = connected;
+    }
+    fillEl.style.width = (p * 100) + '%';
+
+    var bob = reduce ? 0 : Math.sin(now / 900) * 4;
+    var wob = reduce ? 0 : Math.sin(now / 1300) * 2;
+    var scale = 1 + 0.07 * Math.min(1, punch);
+    mango.style.transform =
+      'translate(' + (g.cx - g.mw * 0.5) + 'px,' + (g.cy - g.mh * 0.5 + bob) + 'px) ' +
+      'rotate(' + (-4 + p * 8 + wob) + 'deg) scale(' + scale + ')';
+  }
+
+  function readTarget() {
+    var r = build.getBoundingClientRect();
+    var total = build.offsetHeight - sticky.clientHeight;
+    target = total > 0 ? clamp(-r.top / total) : 1;
+  }
+
+  /* ---- loop (only while the stage is on screen) ---- */
+  var raf = 0, visible = false;
+  function frame(now) {
+    cur += (target - cur) * 0.14;
+    if (Math.abs(target - cur) < 0.0004) cur = target;
+    draw(cur, now);
+    raf = visible ? requestAnimationFrame(frame) : 0;
+  }
+  function start() { if (!raf) raf = requestAnimationFrame(frame); }
+
+  if (reduce) {
+    cur = target = 1;
+    layout();
+    window.addEventListener('resize', layout);
+  } else {
+    readTarget(); cur = target;
+    layout();
+    window.addEventListener('scroll', function () { readTarget(); if (visible) start(); }, { passive: true });
+    window.addEventListener('resize', function () { readTarget(); layout(); });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        visible = entries[0].isIntersecting;
+        if (visible) { readTarget(); start(); }
+      }, { rootMargin: '100px 0px' }).observe(build);
+    } else {
+      visible = true; start();
+    }
+  }
+  if (window.ResizeObserver) new ResizeObserver(function () { readTarget(); layout(); }).observe(sticky);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+
+  /* in-page links: scroll with JS so it also works inside sandboxed previews */
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (ev) {
+      var id = a.getAttribute('href').slice(1);
+      var t = id === 'top' ? document.body : document.getElementById(id);
+      if (!t) return;
+      ev.preventDefault();
+      if (id === 'top') window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      else t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    });
+  });
+})();
+</script>
+</body>
+</html>
