@@ -480,6 +480,23 @@
   .foot a:hover { background: var(--blue); color: var(--ink); }
   .get :focus-visible { outline-color: var(--paper); }
 
+  /* ---------- download toast ---------- */
+  .toast {
+    position: fixed; z-index: 300; left: var(--gut); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    width: min(440px, calc(100vw - 2 * var(--gut)));
+    display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px;
+    background: var(--ink); color: var(--paper); border: 2px solid var(--paper);
+    box-shadow: 0 0 0 2px var(--ink), 6px 6px 0 2px var(--blue);
+    text-transform: none; letter-spacing: .02em; font-size: .8rem; line-height: 1.5;
+    animation: toast-in .35s cubic-bezier(.2, .9, .3, 1.2) both;
+  }
+  .toast[hidden] { display: none; }
+  .toast__body { display: grid; gap: 4px; min-width: 0; }
+  .toast__body b { text-transform: uppercase; letter-spacing: .14em; font-size: .72rem; color: var(--green); }
+  .toast__x { flex: none; margin: -4px -4px 0 0; padding: 4px 8px; background: none; border: 0; color: var(--paper); font: 400 1.5rem/1 var(--mono); cursor: pointer; }
+  .toast__x:hover { color: var(--blue); }
+  @keyframes toast-in { from { translate: 0 24px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+
   /* ---------- reveal on scroll ---------- */
   .js .reveal { translate: 0 30px; transition: translate .7s cubic-bezier(.2, .9, .3, 1) var(--d, 0s); }
   .js .reveal.in { translate: 0 0; }
@@ -540,6 +557,7 @@
   /* ---------- reduced motion: finished build, no scrubbing, no loops ---------- */
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
+    .toast { animation: none; }
     .rise, .grad, .art svg, .marquee__track, .sh, .sh--ribbon svg { animation: none !important; }
     .sh--ribbon path { stroke-dashoffset: 0; }
     .build { height: auto; }
@@ -569,10 +587,15 @@
   <div class="where mono" aria-hidden="true"><b id="whereNum">01</b><i></i><span id="whereName">Mango IDE</span></div>
   <nav class="nav mono" aria-label="Quick links">
     <a class="nlink" href="https://discord.gg/JxpSxGvkm7" target="_blank" rel="noopener">Discord</a>
-    <a class="nbtn" href="#download">Download</a>
+    <a class="nbtn" href="https://github.com/Spackle01/Mango-IDE/releases/download/0.9.1-beta/Mango-Setup-0.9.1-beta.exe" download="Mango-Setup-0.9.1-beta.exe" rel="noopener" data-dl>Download</a>
   </nav>
   <div class="prog" aria-hidden="true"><i id="prog"></i></div>
 </header>
+
+<div class="toast mono" id="toast" role="status" aria-live="polite" hidden>
+  <div class="toast__body"><b>Download started</b><span>Mango IDE 0.9.1-beta for Windows. It is in BETA: expect bugs and inconsistencies.</span></div>
+  <button class="toast__x" id="toastX" type="button" aria-label="Close">&times;</button>
+</div>
 
 <main id="top">
 
@@ -608,7 +631,7 @@ Beta 0.9.1 / Open source</span>
         </h1>
       </div>
       <div class="cta-row mono">
-        <a class="btn" href="#download">Download
+        <a class="btn" href="https://github.com/Spackle01/Mango-IDE/releases/download/0.9.1-beta/Mango-Setup-0.9.1-beta.exe" download="Mango-Setup-0.9.1-beta.exe" rel="noopener" data-dl>Download
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v16M5 12l7 7 7-7"/></svg>
         </a>
         <a class="ulink" href="https://discord.gg/JxpSxGvkm7" target="_blank" rel="noopener">Discord</a>
@@ -681,7 +704,7 @@ Beta 0.9.1 / Open source</span>
             <li style="--i:0;--c:var(--green)"><span class="dot"></span>Claude Code CLI<span class="found">Found</span></li>
             <li style="--i:1;--c:var(--blue)"><span class="dot"></span>Gemini Antigravity<span class="found">Found</span></li>
             <li style="--i:2;--c:var(--green)"><span class="dot"></span>Codex CLI<span class="found">Found</span></li>
-            <li style="--i:3;--c:var(--blue)"><span class="dot"></span>OpenCode CLI<span class="found">Found</span></li>
+            <li style="--i:3;--c:var(--blue)"><span class="dot"></span>OpenCode<span class="found">Found</span></li>
             <li class="more" style="--i:4;--c:var(--green)"><span class="dot"></span>And more</li>
           </ul>
         </article>
@@ -703,7 +726,7 @@ Beta 0.9.1 / Open source</span>
         <p><strong>BETA</strong>Mango IDE is currently in BETA and in development. Expect bugs and inconsistencies.</p>
       </div>
 
-      <a class="dl reveal mono" href="https://github.com/Spackle01/Mango-IDE/releases/download/0.9.1-beta/Mango-Setup-0.9.1-beta.exe" rel="noopener" style="--d:.08s">
+      <a class="dl reveal mono" href="https://github.com/Spackle01/Mango-IDE/releases/download/0.9.1-beta/Mango-Setup-0.9.1-beta.exe" download="Mango-Setup-0.9.1-beta.exe" rel="noopener" data-dl style="--d:.08s">
         <span class="dl__t">Download
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v17M4 11l8 8 8-8M3 22h18"/></svg>
         </span>
@@ -1064,6 +1087,20 @@ Beta 0.9.1 / Open source</span>
   } else {
     cur = target = 1; layout();
   }
+
+  /* downloads start on the click itself (the file is served as an attachment, so the page stays put); show the beta note */
+  var toast = $('toast'), toastX = $('toastX'), toastTimer = 0;
+  function hideToast() { toast.hidden = true; clearTimeout(toastTimer); }
+  Array.prototype.forEach.call(document.querySelectorAll('a[data-dl]'), function (a) {
+    a.addEventListener('click', function () {
+      toast.hidden = false;
+      toast.style.animation = 'none'; void toast.offsetWidth; toast.style.animation = '';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, 9000);
+    });
+  });
+  toastX.addEventListener('click', hideToast);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideToast(); });
 
   /* in-page links: scroll with JS so it also works inside sandboxed previews */
   document.querySelectorAll('a[href^="#"]').forEach(function (a) {
